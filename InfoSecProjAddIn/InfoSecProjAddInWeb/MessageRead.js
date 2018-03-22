@@ -86,5 +86,17 @@
     $("#notificationBody").text(content);
     messageBanner.showBanner();
     messageBanner.toggleExpansion();
-  }
+    }
+
+    //Helper function to make the Watson API call
+    function callWatson(item) {
+        var xhttp = new XMLHttpRequest();
+        xhttp.open("GET", "https://gateway.watsonplatform.net/natural-language-classifier/api", true);
+        xhttp.setRequestHeader("Content-Type?", "application/json");
+        //some username/password?, idk how to get to our classifier
+        xhttp.send();
+        var response = Json.parse(xhttp.responseText);
+
+        //return the data we needed
+    }
 })();
