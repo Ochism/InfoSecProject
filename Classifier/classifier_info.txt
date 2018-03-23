@@ -1,0 +1,5 @@
+Subject Classifier:
+    url: https://gateway.watsonplatform.net/natural-language-classifier/api/v1/classifiers/2fc15ax329-nlc-819
+    username: a477516a-4cdf-4080-93bc-064265ec1643
+    password: 4JnCcEcxFDjM
+
