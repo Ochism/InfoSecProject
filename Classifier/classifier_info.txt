@@ -3,3 +3,8 @@ Subject Classifier:
     username: a477516a-4cdf-4080-93bc-064265ec1643
     password: 4JnCcEcxFDjM
 
+Body Classifier:
+    url: https://gateway.watsonplatform.net/natural-language-classifier/api/v1/classifiers/ab2c7bx342-nlc-368
+    username: cd32418e-01b1-478e-9c24-a46a0767a0c7
+    password: AXISL3obSiSo
+
