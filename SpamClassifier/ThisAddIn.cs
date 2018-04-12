@@ -42,10 +42,11 @@ namespace SpamClassifier
         private void ThisAddIn_Shutdown(object sender, EventArgs e)
         {
         }
+
         /*
          * Creates the specified folder if it doesn't exist
          * 
-         *@param foldername
+         * @param foldername
          *      the name of the folder to ensure exists
          */
         private void EnsureFolderExists(string foldername)
@@ -65,7 +66,7 @@ namespace SpamClassifier
                 root.Folders.Add("WatsonSpam");
             }
         }
-        
+
         /**
          * Moves incoming mail depending on whether or not it is spam.
          * @param eMail
@@ -82,13 +83,17 @@ namespace SpamClassifier
                 if (moveMail != null)
                 {
                     // Classify email
-                    string classification = ClassifyMail(moveMail);
-                    
+                    Tuple<string,double> classification = ClassifyMail(moveMail);
+
                     // Move email if classified as spam
-                    if (classification == "spam")
+                    if (classification.Item1 == "spam")
                     {
-                        // TODO: Include messages in spam subject/body
+                        moveMail.Subject = "[SPAM-" + classification.Item2.ToString() + "%]" + moveMail.Subject;
                         moveMail.Move(watsonSpamFolder);
+                    }
+                    else
+                    {
+                        moveMail.Subject = "[NOT SPAM-" + classification.Item2.ToString() + "%]" + moveMail.Subject;
                     }
                 }
             }
@@ -107,7 +112,7 @@ namespace SpamClassifier
          * 
          * @returns classification of given email
          **/
-        private string ClassifyMail(Outlook.MailItem moveMail)
+        private Tuple<string,double> ClassifyMail(Outlook.MailItem moveMail)
         {
             string classification;
             double subConfWeight = .35;
@@ -123,7 +128,7 @@ namespace SpamClassifier
             // Get top class and weighted confidence of subject
             Classification classifySubjectResult = _subClassifier.Classify(subClassifierID, classifySubjectInput);
             string subClass = classifySubjectResult.TopClass;
-            double subConf = (double) classifySubjectResult.Classes[0].Confidence * subConfWeight;
+            double subConf = (double)classifySubjectResult.Classes[0].Confidence * subConfWeight;
 
             Dictionary<string, List<double>> bodyDict = new Dictionary<string, List<double>>();
             List<double> spamList = new List<double>();
@@ -134,7 +139,7 @@ namespace SpamClassifier
             // Break subject into manageable chunks to classify
             string cleanedBody = moveMail.Body.Replace("\n", "").Replace("\t", "").Replace("\r", "");
             IList<string> bodyChunks = ChunkBody(cleanedBody, 1000);
-            foreach(string chunk in bodyChunks)
+            foreach (string chunk in bodyChunks)
             {
                 string cleanedChunk = chunk;
                 // Classify chunk of body text
@@ -155,17 +160,29 @@ namespace SpamClassifier
             double bodyConf = bodyConfList.Average() * bodyConfWeight;
 
             // Combine classes and weighted confidences to determine final classification
-            if(subClass == bodyClass)
+            double totalConf = subConf + bodyConf;
+            if (subClass == bodyClass)
             {
-                double totalConf = subConf + bodyConf;
                 classification = totalConf >= confLimit ? subClass : classifySubjectResult.Classes[1].ClassName;
             }
             else
             {
                 classification = subConf > bodyConf ? subClass : bodyClass;
+                if (subConf > bodyConf)
+                {
+                    classification = subClass;
+                    totalConf = subConf / subConfWeight;
+                }
+                else
+                {
+                    classification = bodyClass;
+                    totalConf = bodyConf / bodyConfWeight;
+                }
             }
 
-            return classification;
+            totalConf *= 100;
+            totalConf = Math.Round(totalConf, 2);
+            return Tuple.Create<string, double>(classification, totalConf);
         }
 
         /**
@@ -197,7 +214,7 @@ namespace SpamClassifier
         void NewMailMethod()
         {
             // Declare folders to use in mail management
-            Outlook.MAPIFolder inBox = (Outlook.MAPIFolder) this.Application.
+            Outlook.MAPIFolder inBox = (Outlook.MAPIFolder)this.Application.
                 ActiveExplorer().Session.GetDefaultFolder
                 (Outlook.OlDefaultFolders.olFolderInbox);
             Outlook.MAPIFolder root = inBox.Parent;
@@ -205,7 +222,7 @@ namespace SpamClassifier
             Outlook.MAPIFolder junkFolder = Application.ActiveExplorer().Session.GetDefaultFolder(Outlook.OlDefaultFolders.olFolderJunk);
 
             Outlook.Items junkItems = junkFolder.Items;
-            junkItems.Restrict("[UnRead] = true");
+            junkItems = junkItems.Restrict("[UnRead] = true");
 
             // Move mail already classified as junk back to inbox
             foreach (object eMail in junkItems)
@@ -227,7 +244,7 @@ namespace SpamClassifier
 
             // Classify mail in inbox with Watson
             Outlook.Items inboxItems = inBox.Items;
-            inboxItems.Restrict("[UnRead] = true");
+            inboxItems = inboxItems.Restrict("[UnRead] = true");
             foreach (object eMail in inboxItems)
             {
                 MoveIncomingMail(eMail, watsonSpamFolder);
