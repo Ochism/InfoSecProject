@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using IBM.WatsonDeveloperCloud.NaturalLanguageClassifier.v1;
 using IBM.WatsonDeveloperCloud.NaturalLanguageClassifier.v1.Model;
 using System.Net;
+using System.Diagnostics;
 
 namespace SpamClassifier
 {
@@ -27,50 +28,73 @@ namespace SpamClassifier
             _naturalLanguageClassifierService.SetCredential(username, password);
 
             this.Application.NewMail += new Outlook.ApplicationEvents_11_NewMailEventHandler(NewMailMethod);
+
+            //Outlook.MAPIFolder inBox = (Outlook.MAPIFolder)this.Application.
+            //    ActiveExplorer().Session.GetDefaultFolder
+            //    (Outlook.OlDefaultFolders.olFolderInbox);
+            
         }
 
         private void ThisAddIn_Shutdown(object sender, EventArgs e)
         {
         }
 
+        private void ClassifyIncomingMail(object eMail, Outlook.MAPIFolder watsonSpamFolder)
+        {
+            Outlook.MailItem moveMail = null;
+            try
+            {
+                moveMail = eMail as Outlook.MailItem;
+                if (moveMail != null)
+                {
+                    // TODO: Incorporate both subject and body for our text field
+                    ClassifyInput classifyInput = new ClassifyInput
+                    {
+                        Text = moveMail.Subject
+                    };
+
+                    Classification classifyResult = _naturalLanguageClassifierService.Classify(subjectClassifierID, classifyInput);
+                    Debug.WriteLine("TOP CLASS: " + classifyResult.TopClass);
+                    if (classifyResult.TopClass == "spam")
+                    {
+                        // TODO: Include messages in spam subject/body
+                        moveMail.Move(watsonSpamFolder);
+                        moveMail.Body = classifyResult.TopClass + moveMail.Body;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+
         void NewMailMethod()
         {
             // Declare our inbox and junk folder
-            Outlook.MAPIFolder inBox = Application.ActiveExplorer().Session.GetDefaultFolder(Outlook.OlDefaultFolders.olFolderInbox);
+            Outlook.MAPIFolder inBox = (Outlook.MAPIFolder) this.Application.
+                ActiveExplorer().Session.GetDefaultFolder
+                (Outlook.OlDefaultFolders.olFolderInbox);
+            Outlook.MAPIFolder root = inBox.Parent;
+            Outlook.MAPIFolder watsonSpamFolder = root.Folders["WatsonSpam"];
             Outlook.MAPIFolder junkFolder = Application.ActiveExplorer().Session.GetDefaultFolder(Outlook.OlDefaultFolders.olFolderJunk);
-            Outlook.Items items = inBox.Items;
-            Outlook.MailItem moveMail = null;
 
-            // TODO: Iterate only over unread messages
-            foreach (object eMail in items)
+            Outlook.Items inboxItems = inBox.Items;
+            Outlook.Items junkItems = junkFolder.Items;
+            inboxItems.Restrict("[UnRead] = true");
+            junkItems.Restrict("[UnRead] = true");
+
+            foreach (object eMail in inboxItems)
             {
-                try
-                {
-                    moveMail = eMail as Outlook.MailItem;
-                    if (moveMail != null)
-                    {
-                        // TODO: Incorporate both subject and body for our text field
-                        ClassifyInput classifyInput = new ClassifyInput
-                        {
-                            Text = moveMail.Subject
-                        };
+                ClassifyIncomingMail(eMail, watsonSpamFolder);
+            }
 
-                        Classification classifyResult = _naturalLanguageClassifierService.Classify(subjectClassifierID, classifyInput);
-                        if (classifyResult.TopClass == "spam")
-                        {
-                            // TODO: Include messages in spam subject/body
-                            moveMail.Move(junkFolder);
-                            moveMail.Body = classifyResult.TopClass + moveMail.Body;
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(ex.Message);
-                }
+            foreach (object eMail in junkItems)
+            {
+                ClassifyIncomingMail(eMail, watsonSpamFolder);
             }
         }
-        
+
         #region VSTO generated code
 
         /// <summary>
