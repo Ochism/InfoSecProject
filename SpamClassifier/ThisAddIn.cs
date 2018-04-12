@@ -34,13 +34,38 @@ namespace SpamClassifier
             _bodyClassifier = new NaturalLanguageClassifierService();
             _bodyClassifier.SetCredential(bodyUsername, bodyPassword);
 
+            EnsureFolderExists("WatsonSpam");
+
             this.Application.NewMail += new Outlook.ApplicationEvents_11_NewMailEventHandler(NewMailMethod);
         }
 
         private void ThisAddIn_Shutdown(object sender, EventArgs e)
         {
         }
+        /*
+         * Creates the specified folder if it doesn't exist
+         * 
+         *@param foldername
+         *      the name of the folder to ensure exists
+         */
+        private void EnsureFolderExists(string foldername)
+        {
+            Outlook.MAPIFolder inBox = (Outlook.MAPIFolder)this.Application.
+                ActiveExplorer().Session.GetDefaultFolder
+                (Outlook.OlDefaultFolders.olFolderInbox);
+            Outlook.MAPIFolder root = inBox.Parent;
 
+            bool spamFolderExists = false;
+            foreach (Outlook.MAPIFolder f in root.Folders)
+            {
+                spamFolderExists |= f.Name == "WatsonSpam";
+            }
+            if (!spamFolderExists)
+            {
+                root.Folders.Add("WatsonSpam");
+            }
+        }
+        
         /**
          * Moves incoming mail depending on whether or not it is spam.
          * @param eMail
