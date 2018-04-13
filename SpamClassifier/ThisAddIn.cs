@@ -172,8 +172,6 @@ namespace SpamClassifier
             if (subClass == bodyClass)
             {
                 totalConf = subConf + bodyConf;
-                Debug.WriteLine("SUB AND BODY ARE THE SAME. THEY ARE BOTH " + subClass);
-                Debug.WriteLine("THE CONFIDENCE IS " + totalConf.ToString());
                 if (totalConf >= matchingConfLimit)
                 {
                     classification = subClass;
@@ -183,22 +181,16 @@ namespace SpamClassifier
                     classification = "not spam";
                     totalConf = -1.0;
                 }
-                Debug.WriteLine("The final classification is: " + classification);
             }
             else
             {
-                Debug.WriteLine("SUB AND BODY ARE DIFFERENT");
-                Debug.WriteLine("SUB CLASS: " + subClass + subConf.ToString());
-                Debug.WriteLine("BODY CLASS: " + bodyClass + bodyConf.ToString());
                 if (subConf > bodyConf && subConf > differentConfLimit)
                 {
-                    Debug.WriteLine("SUBCONF IS GREATER THAN LIMIT SO IT WILL GET THE SUB CLASS AND CONF");
                     classification = subClass;
                     totalConf = subConf / subConfWeight;
                 }
                 else if (bodyConf >= subConf && bodyConf > differentConfLimit)
                 {
-                    Debug.WriteLine("BODY CONF IS GREATER THAN LIMIT SO IT WILL GET THE BODY CLASS AND CONF");
                     classification = bodyClass;
                     totalConf = bodyConf / bodyConfWeight;
                 }
