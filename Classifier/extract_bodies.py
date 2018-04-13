@@ -37,14 +37,14 @@ def ExtractSubPayload (filename):
     '''
     Extract the body from the .eml file.
     '''
-    if not os.path.exists(filename): # dest path doesnot exist
+    if not os.path.exists(filename):
         print("ERROR: input file does not exist:", filename)
         os.exit(1)
     fp = open(filename)
     msg = email.message_from_file(fp)
     payload = msg.get_payload()
     if type(payload) == type(list()) :
-        payload = payload[0] # only use the first part of payload
+        payload = payload[0]
     if type(payload) != type('') :
         payload = str(payload)
     
@@ -82,5 +82,4 @@ if not os.path.exists(dstdir):
     print 'The destination directory is newly created.'
     os.makedirs(dstdir)
 
-###################################################################
 ExtractBodyFromDir ( srcdir, dstdir )
