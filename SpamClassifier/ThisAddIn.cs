@@ -93,7 +93,14 @@ namespace SpamClassifier
                     }
                     else
                     {
-                        moveMail.Subject = "[NOT SPAM-" + classification.Item2.ToString() + "%]" + moveMail.Subject;
+                        if (classification.Item2 > 0)
+                        {
+                            moveMail.Subject = "[NOT SPAM-" + classification.Item2.ToString() + "%]" + moveMail.Subject;
+                        }
+                        else
+                        {
+                            moveMail.Subject = "[POSSIBLE SPAM]" + moveMail.Subject;
+                        }
                     }
                 }
             }
@@ -115,9 +122,10 @@ namespace SpamClassifier
         private Tuple<string,double> ClassifyMail(Outlook.MailItem moveMail)
         {
             string classification;
-            double subConfWeight = .35;
-            double bodyConfWeight = .65;
-            double confLimit = .88;
+            double subConfWeight = .47;
+            double bodyConfWeight = .53;
+            double matchingConfLimit = .85;
+            double differentConfLimit = .45;
 
             // Classify subject
             ClassifyInput classifySubjectInput = new ClassifyInput
@@ -137,7 +145,7 @@ namespace SpamClassifier
             bodyDict.Add("not spam", notSpamList);
 
             // Break subject into manageable chunks to classify
-            string cleanedBody = moveMail.Body.Replace("\n", "").Replace("\t", "").Replace("\r", "");
+            string cleanedBody = moveMail.Body.Replace("\n", " ").Replace("\t", " ").Replace("\r", " ");
             IList<string> bodyChunks = ChunkBody(cleanedBody, 1000);
             foreach (string chunk in bodyChunks)
             {
@@ -160,23 +168,44 @@ namespace SpamClassifier
             double bodyConf = bodyConfList.Average() * bodyConfWeight;
 
             // Combine classes and weighted confidences to determine final classification
-            double totalConf = subConf + bodyConf;
+            double totalConf;
             if (subClass == bodyClass)
             {
-                classification = totalConf >= confLimit ? subClass : classifySubjectResult.Classes[1].ClassName;
-            }
-            else
-            {
-                classification = subConf > bodyConf ? subClass : bodyClass;
-                if (subConf > bodyConf)
+                totalConf = subConf + bodyConf;
+                Debug.WriteLine("SUB AND BODY ARE THE SAME. THEY ARE BOTH " + subClass);
+                Debug.WriteLine("THE CONFIDENCE IS " + totalConf.ToString());
+                if (totalConf >= matchingConfLimit)
                 {
                     classification = subClass;
-                    totalConf = subConf / subConfWeight;
                 }
                 else
                 {
+                    classification = "not spam";
+                    totalConf = -1.0;
+                }
+                Debug.WriteLine("The final classification is: " + classification);
+            }
+            else
+            {
+                Debug.WriteLine("SUB AND BODY ARE DIFFERENT");
+                Debug.WriteLine("SUB CLASS: " + subClass + subConf.ToString());
+                Debug.WriteLine("BODY CLASS: " + bodyClass + bodyConf.ToString());
+                if (subConf > bodyConf && subConf > differentConfLimit)
+                {
+                    Debug.WriteLine("SUBCONF IS GREATER THAN LIMIT SO IT WILL GET THE SUB CLASS AND CONF");
+                    classification = subClass;
+                    totalConf = subConf / subConfWeight;
+                }
+                else if (bodyConf >= subConf && bodyConf > differentConfLimit)
+                {
+                    Debug.WriteLine("BODY CONF IS GREATER THAN LIMIT SO IT WILL GET THE BODY CLASS AND CONF");
                     classification = bodyClass;
                     totalConf = bodyConf / bodyConfWeight;
+                }
+                else
+                {
+                    classification = "not spam";
+                    totalConf = -1.0;
                 }
             }
 
