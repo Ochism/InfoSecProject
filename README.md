@@ -17,6 +17,7 @@ _**NOTE:** The solution file will not automatically install the IBM Watson Natur
 PM > Install-Package IBM.WatsonDeveloperCloud.NaturalLanguageClassifier.v1
 
 ```
+_**NOTE:** There is a known issue with the version of the System.Net.Http library the Natural Language Classifier package has as a dependency. Please update it to the newest stable version through Nuget_
 ## Components
 
 ### Classifiers
