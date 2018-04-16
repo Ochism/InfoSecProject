@@ -44,6 +44,8 @@ The Outlook Add-in runs in the background of Outlook and fires whenever new mail
 * Classification of the higher of the two weighted confidences taken
 * Requires 95% confidence to keep classification
 
+The design and development of this Outlook Add-in was done by Gregory Ochs, Ethan Knez, and Kurtis Kuszmaul. Code for these the add-in can be found in the __SpamClassifier__ directory.
+
 ## External Components (Not Developed by Team)
 * [IBM Watson Natural Language Classifier](https://github.com/watson-developer-cloud/dotnet-standard-sdk/tree/development/src/IBM.WatsonDeveloperCloud.NaturalLanguageClassifier.v1)
   * Used for custom classifications of text
@@ -53,4 +55,4 @@ The Outlook Add-in runs in the background of Outlook and fires whenever new mail
 ## Contributors
 * Ethan Knez
 * Kurtis Kuszmaul
-* Greg Ochs
+* Gregory Ochs
