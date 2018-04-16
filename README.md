@@ -9,7 +9,7 @@ This software application is a spam email classifier that protects its users fro
 * [IBM Watson Natural Language Classifier](https://github.com/watson-developer-cloud/dotnet-standard-sdk/tree/development/src/IBM.WatsonDeveloperCloud.NaturalLanguageClassifier.v1)
 
 ## Getting Started
-Open up the __SpamClassifier.sln__ Visual Studio solution file on a Windows computer. This will open Visual Studio and build the project. All Add-in code written by the team is located in __ThisAddIn.cs__.
+Open up the __SpamClassifier.sln__ Visual Studio solution file on a Windows computer. This will open Visual Studio and build the project. All Add-in code written by the team is located in __SpamClassifier/ThisAddIn.cs__.
 
 _**NOTE:** The solution file will not automatically install the IBM Watson Natural Language Classifier package. This can be done with the following command issued in the NuGet console:_
 ```
