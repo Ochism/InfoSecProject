@@ -1,3 +1,9 @@
+'''
+This file tests Watson classifiers and reports its accuracy
+and average confidence.
+'''
+__author__ = 'Kurtis Kuszmaul'
+
 import json
 import csv
 import argparse

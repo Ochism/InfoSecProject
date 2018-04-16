@@ -1,3 +1,8 @@
+'''
+This file builds a subject .csv file of subject text and its classification.
+'''
+__author__ = 'Kurtis Kuszmaul'
+
 import email.parser
 import csv
 import argparse

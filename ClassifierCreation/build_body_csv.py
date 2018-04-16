@@ -1,3 +1,8 @@
+'''
+This file builds a .csv file of body text and its classification.
+'''
+__author__ = 'Kurtis Kuszmaul'
+
 import email.parser
 import csv
 import argparse

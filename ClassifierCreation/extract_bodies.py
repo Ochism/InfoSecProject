@@ -1,9 +1,17 @@
+'''
+This file extracts and clean the body text from the
+corpus email files.
+'''
+__author__ = 'Kurtis Kuszmaul'
+
 import email.parser 
 import os, sys, stat
 import shutil
 from HTMLParser import HTMLParser
 
 class MLStripper(HTMLParser):
+    ''' Class for stripping HTML from text '''
+
     def __init__(self):
         self.reset()
         self.fed = []
@@ -13,14 +21,23 @@ class MLStripper(HTMLParser):
         return ''.join(self.fed)
 
 def strip_tags(html):
+    ''' Strips HTML tags from text '''
+
     s = MLStripper()
     s.feed(html)
     return s.get_data()
 
 def chunkstring(string, length):
+    ''' Chunks texts into strings of specified length '''
+
     return (string[0+i:length+i] for i in range(0, len(string), length))
 
 def process_text(body, dstfile):
+    ''' 
+    Removes HTML tags, whitespace characters and divides bodies
+    into appropriately-sized chunks.
+    '''
+
     cleaned_text = strip_tags(body)
     cleaned_text = cleaned_text.replace('\n','')
     cleaned_text = cleaned_text.replace('\t','')
@@ -32,6 +49,11 @@ def process_text(body, dstfile):
         dstfile.write(stripped + '\n')
 
     return cleaned_text
+
+#############################################################
+# Code below primarily taken from 
+# http://www.csmining.org/index.php/spam-email-datasets-.html
+#############################################################
 
 def ExtractSubPayload (filename):
     '''
