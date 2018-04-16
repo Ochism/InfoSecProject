@@ -8,6 +8,14 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using System.Linq;
 
+/**
+ * This file includes the core functionality of the Spam Classifier Outlook Add-in.
+ * 
+ * @author
+ *      Ethan Knez
+ *      Kurtis Kuszmaul
+ *      Greg Ochs
+ **/
 namespace SpamClassifier
 {
     public partial class ThisAddIn
@@ -22,6 +30,9 @@ namespace SpamClassifier
         NaturalLanguageClassifierService _subClassifier;
         NaturalLanguageClassifierService _bodyClassifier;
 
+        /**
+         * @author Ethan Knez
+         **/
         private void ThisAddIn_Startup(object sender, EventArgs e)
         {
             // For Windows 7 and later
@@ -43,12 +54,14 @@ namespace SpamClassifier
         {
         }
 
-        /*
+        /**
          * Creates the specified folder if it doesn't exist
          * 
          * @param foldername
          *      the name of the folder to ensure exists
-         */
+         *
+         * @author Greg Ochs
+         **/
         private void EnsureFolderExists(string foldername)
         {
             Outlook.MAPIFolder inBox = (Outlook.MAPIFolder)this.Application.
@@ -73,6 +86,8 @@ namespace SpamClassifier
          *      email object to be analyzed
          * @param watsonSpamFolder
          *      folder to move spam emails to
+         *
+         * @author Ethan Knez
          **/
         private void MoveIncomingMail(object eMail, Outlook.MAPIFolder watsonSpamFolder)
         {
@@ -117,7 +132,9 @@ namespace SpamClassifier
          * @param moveMail
          *      candidate email to classify
          * 
-         * @returns classification of given email
+         * @returns classification and confidence of given email
+         * 
+         * @author Kurtis Kuszmaul
          **/
         private Tuple<string,double> ClassifyMail(Outlook.MailItem moveMail)
         {
@@ -215,6 +232,8 @@ namespace SpamClassifier
          *      size of chunks to be returned
          * 
          * @returns list of chunks with max size = chunkSize
+         * 
+         * @author Kurtis Kuszmaul
          **/
         private IList<string> ChunkBody(string text, int chunkSize)
         {
@@ -231,6 +250,11 @@ namespace SpamClassifier
 
         /**
          * Fires whenever account receives a new email.
+         * 
+         * @author
+         *      Ethan Knez
+         *      Kurtis Kuszmaul
+         *      Greg Ochs
          **/
         void NewMailMethod()
         {
@@ -240,12 +264,16 @@ namespace SpamClassifier
                 (Outlook.OlDefaultFolders.olFolderInbox);
             Outlook.MAPIFolder root = inBox.Parent;
             Outlook.MAPIFolder watsonSpamFolder = root.Folders["WatsonSpam"];
-            Outlook.MAPIFolder junkFolder = Application.ActiveExplorer().Session.GetDefaultFolder(Outlook.OlDefaultFolders.olFolderJunk);
+            Outlook.MAPIFolder junkFolder = (Outlook.MAPIFolder)this.Application.
+                ActiveExplorer().Session.GetDefaultFolder
+                (Outlook.OlDefaultFolders.olFolderJunk);
 
             Outlook.Items junkItems = junkFolder.Items;
             junkItems = junkItems.Restrict("[UnRead] = true");
 
             // Move mail already classified as junk back to inbox
+            // (this is done to ensure emails are only filtered using
+            // our classifier and not Outlook's.)
             foreach (object eMail in junkItems)
             {
                 Outlook.MailItem moveMail = null;
